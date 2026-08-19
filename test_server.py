@@ -93,6 +93,15 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(status, 401)
         self.assertEqual(error["error"], "密碼錯誤")
 
+    def test_render_head_probe(self):
+        status, body = self.request("HEAD", "/")
+        self.assertEqual(status, 200)
+        self.assertIsNone(body)
+
+        status, body = self.request("HEAD", "/api/health")
+        self.assertEqual(status, 200)
+        self.assertIsNone(body)
+
     def test_logout(self):
         self.login()
         status, _ = self.request("POST", "/api/logout", {})

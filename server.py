@@ -21,7 +21,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-HOST = os.environ.get("HOST", "127.0.0.1")
+# 0.0.0.0 allows cloud platforms such as Render to reach the service.
+# It also works for local development via http://127.0.0.1:8000.
+HOST = os.environ.get("HOST", "0.0.0.0")
 PORT = int(os.environ.get("PORT", "8000"))
 APP_PASSWORD = os.environ.get("APP_PASSWORD", "taskflow123")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
@@ -223,6 +225,18 @@ class ApiHandler(BaseHTTPRequestHandler):
             self._json({"status": "ok"})
             return
         self._serve_static(path)
+
+    def do_HEAD(self) -> None:
+        """Support Render's port and health probes without returning a body."""
+        path = urlparse(self.path).path
+        if path in {"/", "/api/health"}:
+            self.send_response(HTTPStatus.OK)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+        self.send_response(HTTPStatus.NOT_FOUND)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     def do_POST(self) -> None:
         path = urlparse(self.path).path
